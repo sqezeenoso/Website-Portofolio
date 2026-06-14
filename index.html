@@ -801,27 +801,61 @@ document.querySelectorAll('.skill-card').forEach(card => {
 });
 
 /* ---- CONTACT FORM ---- */
-function handleSubmit(e) {
+async function handleSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById('btnSubmit');
   const status = document.getElementById('formStatus');
   const name = document.getElementById('fieldName').value;
+  const email = document.getElementById('fieldEmail').value;
+  const subject = document.getElementById('fieldSubject').value;
+  const message = document.getElementById('fieldMsg').value;
 
   btn.disabled = true;
   btn.innerHTML = '<ion-icon name="hourglass-outline"></ion-icon> Mengirim...';
   status.className = 'form-status';
   status.style.display = 'none';
 
-  /* Simulasi pengiriman */
-  setTimeout(() => {
+  // SEMENTARA: Anda perlu mengganti token ini dengan Access Key Anda dari web3forms.com
+  const accessKey = '992c2015-3585-4241-9681-6b518627f9bc'; 
+
+  try {
+    const response = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        access_key: accessKey,
+        name: name,
+        email: email,
+        subject: subject,
+        message: message,
+        from_name: 'Portofolio Kontak Form'
+      })
+    });
+
+    const result = await response.json();
+
+    if (response.status === 200 && result.success) {
+      btn.disabled = false;
+      btn.innerHTML = '<ion-icon name="send-outline"></ion-icon> Kirim Pesan';
+      status.className = 'form-status success';
+      status.textContent = '✓ Pesan berhasil dikirim! Admin akan segera membalas.';
+      status.style.display = 'block';
+      document.getElementById('contactForm').reset();
+      showToast('Pesan terkirim dari ' + name);
+    } else {
+      throw new Error(result.message || 'Gagal mengirim pesan.');
+    }
+  } catch (error) {
     btn.disabled = false;
     btn.innerHTML = '<ion-icon name="send-outline"></ion-icon> Kirim Pesan';
-    status.className = 'form-status success';
-    status.textContent = '✓ Pesan berhasil dikirim! Saya akan segera membalas.';
+    status.className = 'form-status error';
+    status.textContent = '✗ Gagal mengirim pesan: ' + error.message;
     status.style.display = 'block';
-    document.getElementById('contactForm').reset();
-    showToast('Pesan terkirim dari ' + name);
-  }, 1800);
+    showToast('Gagal mengirim pesan');
+  }
 }
 
 /* ---- TOAST ---- */
